@@ -11,7 +11,7 @@
         <div class="card-header">
             <h3 class="card-title">Daftar Pelanggan</h3>
             <div class="card-tools">
-                <a href="{{ route('pelanggan.create') }}" class="btn btn-primary">
+                <a href="{{ route('admin.pelanggan.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Tambah Pelanggan
                 </a>
             </div>
@@ -44,8 +44,8 @@
                             <td>{{ $pelanggan->alamat }}</td>
                             <td>{{ $pelanggan->nomor_telepon }}</td>
                             <td>
-                                <form onsubmit="return confirm('Apakah Anda Yakin ?');" action="{{ route('pelanggan.destroy', $pelanggan->id) }}" method="POST">
-                                    <a href="{{ route('pelanggan.edit', $pelanggan->id) }}" class="btn btn-sm btn-warning">
+                                <form onsubmit="return confirm('Apakah Anda Yakin ?');" action="{{ route('admin.pelanggan.destroy', $pelanggan->id) }}" method="POST">
+                                    <a href="{{ route('admin.pelanggan.edit', $pelanggan->id) }}" class="btn btn-sm btn-warning">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @csrf

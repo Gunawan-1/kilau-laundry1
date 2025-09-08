@@ -40,7 +40,7 @@ class PelangganController extends Controller
         Pelanggan::create($request->all());
 
         // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('pelanggan.index')
+        return redirect()->route('admin.pelanggan.index')
                          ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
@@ -77,7 +77,7 @@ class PelangganController extends Controller
         $pelanggan->update($request->all());
 
         // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('pelanggan.index')
+        return redirect()->route('admin.pelanggan.index')
                          ->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
@@ -90,7 +90,7 @@ class PelangganController extends Controller
         $pelanggan->delete();
 
         // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('pelanggan.index')
+        return redirect()->route('admin.pelanggan.index')
                          ->with('success', 'Pelanggan berhasil dihapus.');
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama');
             $table->text('alamat');
             $table->string('nomor_telepon', 20);
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps(); // Ini akan membuat kolom created_at dan updated_at
         });
     }

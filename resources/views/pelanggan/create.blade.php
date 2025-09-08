@@ -9,7 +9,7 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('pelanggan.store') }}" method="POST">
+            <form action="{{ route('admin.pelanggan.store') }}" method="POST">
                 @csrf
                 <div class="form-group">
                     <label for="nama">Nama Pelanggan</label>
@@ -36,7 +36,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
-                <a href="{{ route('pelanggan.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('admin.pelanggan.index') }}" class="btn btn-secondary">Batal</a>
             </form>
         </div>
     </div>

@@ -300,9 +300,50 @@ return [
 
     'menu' => [
         [
+            'text'  => 'Dashboard',
+            'route' => 'admin.dashboard',
+            'icon'  => 'fas fa-tachometer-alt',
+        ],
+        [
+            'text'  => 'Profil Laundry',
+            'route' => 'admin.profil.edit',
+            'icon'  => 'fas fa-store',
+        ],
+        [
             'text' => 'Pelanggan',
-            'url' => 'pelanggan', // ini akan mengarah ke route 'pelanggan.index'
-            'icon' => 'fas fa-fw fa-users',
+            'url'  => 'admin/pelanggan',
+            'icon' => 'fas fa-users',
+        ],
+        [
+            'text' => 'Layanan',
+            'url'  => 'admin/layanan',
+            'icon' => 'fas fa-soap',
+        ],
+        [
+            'text' => 'Diskon',
+            'url'  => 'admin/diskon',
+            'icon' => 'fas fa-tags',
+        ],
+        [
+            'text'    => 'Transaksi',
+            'icon'    => 'fas fa-cash-register',
+            'submenu' => [
+                [
+                    'text' => 'Daftar Transaksi',
+                    'url'  => 'admin/transaksi',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Tambah Transaksi Baru',
+                    'url'  => 'admin/transaksi/create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+            ],
+        ],
+        [
+            'text'  => 'Laporan',
+            'route' => 'admin.laporan.index',
+            'icon'  => 'fas fa-file-alt',
         ],
     ],
 
@@ -342,7 +383,7 @@ return [
 
     'plugins' => [
         'Datatables' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'js',
@@ -361,8 +402,63 @@ return [
                 ],
             ],
         ],
+        'DatatablesPlugins' => [
+        'active' => true, // Pastikan diaktifkan
+        'files' => [
+            // CSS untuk Buttons
+            [
+                'type' => 'css',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/css/buttons.bootstrap4.min.css',
+            ],
+            
+            // JS untuk Buttons (inti)
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/js/dataTables.buttons.min.js',
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/js/buttons.bootstrap4.min.js',
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/js/buttons.html5.min.js',
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/js/buttons.print.min.js',
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/buttons/js/buttons.colVis.min.js',
+            ],
+
+            // JS Tambahan untuk Ekspor Excel dan PDF
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/jszip/jszip.min.js', // Untuk Excel
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/pdfmake/pdfmake.min.js', // Untuk PDF
+            ],
+            [
+                'type' => 'js',
+                'asset' => true,
+                'location' => 'vendor/datatables-plugins/pdfmake/vfs_fonts.js', // Font untuk PDF
+            ],
+        ],
+    ],
         'Select2' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'js',

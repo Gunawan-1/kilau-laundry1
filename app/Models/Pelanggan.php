@@ -9,14 +9,18 @@ class Pelanggan extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
+        'user_id', // <-- Tambahkan ini
         'nama',
         'alamat',
         'nomor_telepon',
     ];
+
+    /**
+     * Satu data Pelanggan dimiliki oleh satu User.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
