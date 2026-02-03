@@ -20,7 +20,7 @@ class CheckRole
             return redirect('login');
         }
 
-        $user = Auth::user();
+        $user = Auth::user(); 
 
         foreach ($roles as $role) {
             if ($user->role == $role) {

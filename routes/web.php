@@ -9,6 +9,7 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\PelangganDashboardController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\PelangganProfilController;
 
 // Halaman Awal
 Route::get('/', [LandingPageController::class, 'index']);
@@ -48,6 +49,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/pesanan', [PelangganDashboardController::class, 'store'])->name('pesanan.store');
         Route::post('/cek-diskon', [TransaksiController::class, 'cekDiskon'])->name('cekDiskon');
         Route::get('/pesanan/{transaksi}', [PelangganDashboardController::class, 'show'])->name('pesanan.show');
+        Route::get('/profil', [PelangganProfilController::class, 'edit'])->name('profil.edit');
+Route::post('/profil', [PelangganProfilController::class, 'update'])->name('profil.update');
+
     });
 });
 

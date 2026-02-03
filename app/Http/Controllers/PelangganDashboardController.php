@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Transaksi;
 use App\Models\Layanan;
 use App\Models\DetailTransaksi;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Models\Diskon;
 use Carbon\Carbon;
 
 class PelangganDashboardController extends Controller
@@ -38,7 +39,9 @@ class PelangganDashboardController extends Controller
     public function create()
     {
         $layanans = Layanan::orderBy('nama_layanan')->get();
-        return view('pelanggan-dashboard.create', compact('layanans'));
+        $diskons = Diskon::where('status', true)->get();
+
+        return view('pelanggan-dashboard.create', compact('layanans', 'diskons'));
     }
 
     /**
@@ -47,51 +50,56 @@ class PelangganDashboardController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // Validasi input nominal tidak lagi jadi prioritas utama
             'detail_transaksi' => ['required', 'array', 'min:1'],
             'detail_transaksi.*.layanan_id' => ['required', 'exists:layanans,id'],
             'detail_transaksi.*.kuantitas' => ['required', 'numeric', 'min:0.1'],
-            'manual_diskon_id' => 'nullable|exists:diskons,id' // Validasi diskon manual
+            'manual_diskon_id' => 'nullable|exists:diskons,id'
         ]);
 
         try {
             DB::beginTransaction();
-            
-            // --- [START] BAGIAN PERHITUNGAN ULANG ---
+
             $recalculatedSubtotal = 0;
             $itemsForDiscountCheck = [];
             $detailTransaksiData = [];
 
-            // 1. Hitung ulang subtotal
             foreach ($request->detail_transaksi as $detail) {
                 $layanan = Layanan::find($detail['layanan_id']);
                 if (!$layanan) {
                     throw new \Exception("Layanan tidak ditemukan.");
                 }
+
                 $kuantitas = $detail['kuantitas'];
                 $harga = $layanan->harga_per_kg;
                 $itemSubtotal = $harga * $kuantitas;
-                
+
                 $recalculatedSubtotal += $itemSubtotal;
 
-                $itemsForDiscountCheck[] = ['layanan_id' => $layanan->id, 'kuantitas' => $kuantitas, 'subtotal' => $itemSubtotal];
-                $detailTransaksiData[] = ['layanan_id' => $layanan->id, 'kuantitas' => $kuantitas, 'harga' => $harga, 'subtotal' => $itemSubtotal];
+                $itemsForDiscountCheck[] = [
+                    'layanan_id' => $layanan->id,
+                    'kuantitas' => $kuantitas,
+                    'subtotal' => $itemSubtotal
+                ];
+
+                $detailTransaksiData[] = [
+                    'layanan_id' => $layanan->id,
+                    'kuantitas' => $kuantitas,
+                    'harga' => $harga,
+                    'subtotal' => $itemSubtotal
+                ];
             }
 
-            // 2. Hitung ulang diskon terbaik
             $recalculatedDiskon = $this->calculateBestDiscount(
-                $itemsForDiscountCheck, 
-                $recalculatedSubtotal, 
+                $itemsForDiscountCheck,
+                $recalculatedSubtotal,
                 $request->input('manual_diskon_id')
             );
-            
-            // 3. Hitung ulang total bayar
+
             $recalculatedTotalBayar = $recalculatedSubtotal - $recalculatedDiskon;
-            // --- [END] BAGIAN PERHITUNGAN ULANG ---
 
             $pelanggan = Auth::user()->pelanggan;
-
             $adminUser = User::where('role', 'admin')->first();
+
             if (!$adminUser) {
                 throw new \Exception("Tidak ada user admin yang dapat menangani pesanan ini.");
             }
@@ -101,9 +109,9 @@ class PelangganDashboardController extends Controller
                 'pelanggan_id' => $pelanggan->id,
                 'user_id' => $adminUser->id,
                 'tanggal_masuk' => now(),
-                'subtotal' => $recalculatedSubtotal,    // Gunakan nilai aman
-                'diskon' => $recalculatedDiskon,        // Gunakan nilai aman
-                'total_bayar' => $recalculatedTotalBayar, // Gunakan nilai aman
+                'subtotal' => $recalculatedSubtotal,
+                'diskon' => $recalculatedDiskon,
+                'total_bayar' => $recalculatedTotalBayar,
                 'status' => 'Baru',
                 'status_pembayaran' => 'Belum Lunas',
             ]);
@@ -122,16 +130,63 @@ class PelangganDashboardController extends Controller
         }
     }
 
+    /**
+     * Menampilkan detail transaksi tertentu.
+     */
     public function show(Transaksi $transaksi)
     {
-        // Keamanan: Pastikan transaksi ini milik pelanggan yang sedang login
         if ($transaksi->pelanggan_id !== Auth::user()->pelanggan->id) {
             abort(403, 'Akses Ditolak');
         }
 
-        // Load relasi yang dibutuhkan
         $transaksi->load('detailTransaksis.layanan');
 
         return view('pelanggan-dashboard.show', compact('transaksi'));
+    }
+
+    /**
+     * Menghitung diskon terbaik (manual atau otomatis) berdasarkan data transaksi.
+     */
+    private function calculateBestDiscount(array $items, float $subtotal, $manualDiskonId = null)
+    {
+        $bestDiskon = 0;
+
+        // Cek diskon manual terlebih dahulu
+        if ($manualDiskonId) {
+            $diskon = Diskon::find($manualDiskonId);
+            if ($diskon) {
+                if ($diskon->tipe === 'persen') {
+                    $bestDiskon = ($subtotal * $diskon->nilai) / 100;
+                } elseif ($diskon->tipe === 'tetap') {
+                    $bestDiskon = $diskon->nilai;
+                }
+            }
+        } else {
+            // Cek diskon otomatis yang aktif
+            $diskons = Diskon::where('status', true)
+                            ->where('jenis_aturan', '!=', 'tanpa_aturan')
+                            ->get();
+
+            foreach ($diskons as $diskon) {
+                if ($diskon->jenis_aturan === 'berdasarkan_layanan_berat') {
+                    foreach ($items as $item) {
+                        if (
+                            $item['layanan_id'] == $diskon->layanan_id_aturan &&
+                            $item['kuantitas'] >= $diskon->minimal_berat_aturan
+                        ) {
+                            $potensiDiskon = $diskon->tipe === 'persen'
+                                ? ($item['subtotal'] * $diskon->nilai) / 100
+                                : $diskon->nilai;
+
+                            if ($potensiDiskon > $bestDiskon) {
+                                $bestDiskon = $potensiDiskon;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $bestDiskon;
     }
 }

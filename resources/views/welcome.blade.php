@@ -43,15 +43,19 @@
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="#" class="flex items-center space-x-4">
-                @if($profil && $profil->logo)
-                    {{-- [DIUBAH] Logo diperbesar --}}
-                    <img src="{{ Storage::url($profil->logo) }}" alt="Logo {{ $profil->nama_laundry }}" class="h-16 w-auto">
-                @else
-                    <span class="text-3xl font-extrabold text-blue-600">
-                        {{ $profil->nama_laundry ?? 'CleanFast' }}<span class="text-slate-800">.</span>
-                    </span>
-                @endif
-            </a>
+    @if($profil && $profil->logo)
+        <img src="{{ Storage::url($profil->logo) }}" alt="Logo {{ $profil->nama_laundry }}" class="h-16 w-auto">
+        {{-- Pindahkan kode ini ke dalam kondisi IF --}}
+        <span class="text-3xl font-extrabold text-blue-600">
+            {{ $profil->nama_laundry ?? 'CleanFast' }}<span class="text-slate-800">.</span>
+        </span>
+    @else
+        {{-- Jika tidak ada logo, tetap tampilkan nama laundry --}}
+        <span class="text-3xl font-extrabold text-blue-600">
+            {{ $profil->nama_laundry ?? 'CleanFast' }}<span class="text-slate-800">.</span>
+        </span>
+    @endif
+</a>
             <div class="hidden md:flex space-x-8 items-center font-medium">
                 <a href="#layanan" class="text-slate-600 hover:text-blue-600 transition-colors">Layanan</a>
                 <a href="#cara-pesan" class="text-slate-600 hover:text-blue-600 transition-colors">Cara Pesan</a>
