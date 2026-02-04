@@ -1,5 +1,8 @@
 <x-guest-layout title="Login">
     <!-- Login Card -->
+     <form action="http://127.0.0.1:8000/login" method="POST">
+
+<form action="{{ route('login') }}" method="POST">
     <div class="flex items-center justify-center min-h-screen bg-gray-100">
         <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
             

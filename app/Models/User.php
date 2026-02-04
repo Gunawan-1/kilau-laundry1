@@ -50,4 +50,23 @@ class User extends Authenticatable
     {
         return $this->hasOne(Pelanggan::class);
     }
+
+    // Fungsi untuk menampilkan foto di profil bulat
+    public function adminlte_image()
+    {
+        // Membuat inisial otomatis berdasarkan nama user
+        // Background biru (#007bff), teks putih (fff)
+    // Mengambil inisial dari nama user, background biru, tulisan putih
+    return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=007bff&color=fff';
 }
+
+    // Fungsi untuk menampilkan deskripsi di bawah nama (Email & Role)
+    public function adminlte_desc()
+    {
+        return $this->email . ' | ' . strtoupper($this->role);
+    }
+}
+
+
+
+

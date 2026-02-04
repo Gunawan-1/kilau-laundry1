@@ -134,7 +134,12 @@ class TransaksiController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.transaksi.show', $transaksi->id)->with('success', 'Transaksi berhasil dibuat!');
+            // Jika yang login pegawai, kembalikan ke daftar transaksi pegawai, jika admin ke detail admin
+if (auth()->user()->role === 'pegawai') {
+    return redirect()->route('pegawai.transaksi.index')->with('success', 'Transaksi berhasil dibuat!');
+}
+
+return redirect()->route('admin.transaksi.show', $transaksi->id)->with('success', 'Transaksi berhasil dibuat!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -204,25 +209,31 @@ class TransaksiController extends Controller
     /**
      * Mengupdate status laundry & pembayaran.
      */
-    public function updateStatus(Request $request, Transaksi $transaksi)
-    {
-        $request->validate([
-            'status' => 'required|in:Baru,Proses,Selesai,Diambil',
-            'status_pembayaran' => 'required|in:Belum Lunas,Lunas',
-        ]);
+   public function updateStatus(Request $request, Transaksi $transaksi)
+{
+    $request->validate([
+        'status' => 'required|in:Baru,Cuci,Setrika,Packing,Selesai,Diambil',
+        'status_pembayaran' => 'required|in:Belum Lunas,Lunas',
+    ]);
 
-        $transaksi->update([
-            'status' => $request->status,
-            'status_pembayaran' => $request->status_pembayaran,
-        ]);
-        
-        if ($request->status == 'Selesai' && is_null($transaksi->tanggal_selesai)) {
-            $transaksi->update(['tanggal_selesai' => now()]);
-        }
+    // LOGIKA PENGURANGAN STOK OTOMATIS
+    if ($request->status == 'Cuci' && $transaksi->status != 'Cuci') {
+        // Asumsi: Deterjen adalah ID 1 dan Pewangi ID 2
+        // Kamu bisa sesuaikan ID-nya sesuai database
+        $deterjen = \App\Models\Bahan::find(1);
+        $pewangi = \App\Models\Bahan::find(2);
 
-        // Redirect kembali ke halaman show untuk melihat perubahan
-        return redirect()->route('admin.transaksi.show', $transaksi->id)->with('success', 'Status transaksi berhasil diperbarui.');
+        if ($deterjen) $deterjen->decrement('stok', 50); // Kurangi 50ml
+        if ($pewangi) $pewangi->decrement('stok', 25);  // Kurangi 25ml
     }
+
+    $transaksi->update([
+        'status' => $request->status,
+        'status_pembayaran' => $request->status_pembayaran,
+    ]);
+
+    return redirect()->back()->with('success', 'Status dan stok berhasil diperbarui.');
+}
 
     /**
      * Menghapus data transaksi.
@@ -279,5 +290,29 @@ class TransaksiController extends Controller
         }
 
         return response()->json(['potongan' => $potonganTerbesar]);
+    }
+    /**
+     * [BARU] Menampilkan daftar transaksi khusus untuk view Pegawai
+     */
+    public function indexPegawai()
+    {
+        // Data sama dengan admin, tapi diarahkan ke folder view pegawai
+        $transaksis = Transaksi::with('pelanggan')->latest()->paginate(10);
+        return view('pegawai.transaksi.index', compact('transaksis'));
+    }
+
+    /**
+     * [BARU] Menampilkan halaman buat transaksi khusus untuk view Pegawai
+     */
+    public function createPegawai()
+    {
+        $pelanggans = Pelanggan::orderBy('nama')->get();
+        $layanans = Layanan::orderBy('nama_layanan')->get();
+        
+        $diskons = Diskon::where('jenis_aturan', 'tanpa_aturan')
+                         ->where('status', 1) 
+                         ->get();
+
+        return view('pegawai.transaksi.create', compact('pelanggans', 'layanans', 'diskons'));
     }
 }

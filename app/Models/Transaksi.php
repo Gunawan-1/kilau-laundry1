@@ -34,6 +34,12 @@ class Transaksi extends Model
 
     public function detailTransaksis()
     {
-        return $this->hasMany(DetailTransaksi::class);
+        return $this->hasMany(DetailTransaksi::class, 'transaksi_id');
+    }
+
+    // Tambahan relasi agar sinkron dengan data Admin/Layanan
+    public function detail_transaksi() 
+    {
+        return $this->hasOne(DetailTransaksi::class);
     }
 }

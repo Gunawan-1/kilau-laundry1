@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up()
+{
+    Schema::create('bahans', function (Blueprint $table) {
+        $table->id();
+        $table->string('nama_bahan'); // Contoh: Deterjen, Pewangi, Plastik
+        $table->integer('stok');      // Jumlah dalam satuan (misal: ml atau pcs)
+        $table->string('satuan');     // ml, gram, pcs
+        $table->timestamps();
+    });
+}
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('bahans');
+    }
+};

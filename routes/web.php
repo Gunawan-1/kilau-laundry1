@@ -10,6 +10,8 @@ use App\Http\Controllers\PelangganDashboardController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PelangganProfilController;
+use App\Http\Controllers\OwnerDashboardController;
+use App\Http\Controllers\PegawaiDashboardController;
 
 // Halaman Awal
 Route::get('/', [LandingPageController::class, 'index']);
@@ -18,11 +20,20 @@ Route::get('/', [LandingPageController::class, 'index']);
 Route::get('/dashboard', function () {
     $user = auth()->user();
     if ($user->role == 'admin') {
-        return redirect()->route('admin.dashboard');
-    }
-    if ($user->role == 'pelanggan') {
-        return redirect()->route('pelanggan.dashboard');
-    }
+    return redirect()->route('admin.dashboard');
+}
+
+if ($user->role == 'owner') {
+    return redirect()->route('owner.dashboard');
+}
+
+if ($user->role == 'pegawai') {
+    return redirect()->route('pegawai.dashboard');
+}
+
+if ($user->role == 'pelanggan') {
+    return redirect()->route('pelanggan.dashboard');
+}
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grup untuk Rute yang Memerlukan Autentikasi
@@ -53,6 +64,33 @@ Route::middleware('auth')->group(function () {
 Route::post('/profil', [PelangganProfilController::class, 'update'])->name('profil.update');
 
     });
+  
+
+ // ... rute lainnya ...
+
+// owner 
+// owner 
+Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function () {
+    Route::get('/dashboard', [OwnerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/laporan', [AdminDashboardController::class, 'laporan'])->name('laporan');
+});
+
+Route::middleware(['auth', 'role:pegawai'])->prefix('pegawai')->name('pegawai.')->group(function () {
+    Route::get('/dashboard', [PegawaiDashboardController::class, 'index'])->name('dashboard');
+    
+    // Route Transaksi khusus Pegawai (Terpisah dari Admin)
+    Route::get('/transaksi', [TransaksiController::class, 'indexPegawai'])->name('transaksi.index');
+    Route::get('/transaksi/create', [TransaksiController::class, 'createPegawai'])->name('transaksi.create');
+    Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
+
+    // Route Absen
+    Route::post('/absen-masuk', [PegawaiDashboardController::class, 'absenMasuk'])->name('absen.masuk');
+    Route::post('/absen-pulang', [PegawaiDashboardController::class, 'absenPagawai'])->name('absen.pulang');
+    Route::resource('bahan', BahanController::class);
+    Route::post('bahan/update-stok/{id}', [BahanController::class, 'updateStok'])->name('bahan.updateStok');
+});
+
+
 });
 
 require __DIR__.'/auth.php';

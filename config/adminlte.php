@@ -133,12 +133,12 @@ return [
     |
     */
 
-    'usermenu_enabled' => true,
-    'usermenu_header' => false,
-    'usermenu_header_class' => 'bg-primary',
-    'usermenu_image' => false,
-    'usermenu_desc' => false,
-    'usermenu_profile_url' => false,
+   'usermenu_enabled' => true,
+'usermenu_header' => true,
+'usermenu_header_class' => 'bg-primary',
+'usermenu_image' => true, 
+'usermenu_desc' => true, 
+'usermenu_profile_url' => false, // Tetap false agar tidak ada tombol profil default yang double
 
     /*
     |--------------------------------------------------------------------------
@@ -298,54 +298,7 @@ return [
     |
     */
 
-    'menu' => [
-        [
-            'text'  => 'Dashboard',
-            'route' => 'admin.dashboard',
-            'icon'  => 'fas fa-tachometer-alt',
-        ],
-        [
-            'text'  => 'Profil Laundry',
-            'route' => 'admin.profil.edit',
-            'icon'  => 'fas fa-store',
-        ],
-        [
-            'text' => 'Pelanggan',
-            'url'  => 'admin/pelanggan',
-            'icon' => 'fas fa-users',
-        ],
-        [
-            'text' => 'Layanan',
-            'url'  => 'admin/layanan',
-            'icon' => 'fas fa-soap',
-        ],
-        [
-            'text' => 'Diskon',
-            'url'  => 'admin/diskon',
-            'icon' => 'fas fa-tags',
-        ],
-        [
-            'text'    => 'Transaksi',
-            'icon'    => 'fas fa-cash-register',
-            'submenu' => [
-                [
-                    'text' => 'Daftar Transaksi',
-                    'url'  => 'admin/transaksi',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Tambah Transaksi Baru',
-                    'url'  => 'admin/transaksi/create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'  => 'Laporan',
-            'route' => 'admin.laporan.index',
-            'icon'  => 'fas fa-file-alt',
-        ],
-    ],
+    'menu' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -555,4 +508,25 @@ return [
     */
 
     'livewire' => false,
+
+'extra_css' => [
+    '<style>
+        /* Menghilangkan teks nama di navbar (sebelah foto/inisial) */
+        .navbar-nav > .user-menu > .nav-link > span {
+            display: none !important;
+        }
+        
+        /* Menghilangkan margin agar posisi foto/inisial pas di tengah */
+        .navbar-nav > .user-menu > .nav-link > img, 
+        .navbar-nav > .user-menu > .nav-link > .user-image {
+            margin-right: 0 !important;
+        }
+
+        /* Target spesifik untuk teks inisial */
+        .navbar-nav > .user-menu > .nav-link > span.d-none.d-md-inline {
+            display: none !important;
+        }
+    </style>',
+],
 ];
+

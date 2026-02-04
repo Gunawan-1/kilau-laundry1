@@ -25,6 +25,21 @@ class AdminUserSeeder extends Seeder
                 'role' => 'admin',
             ]);
 
+            User::create([
+                'name' => 'Owner Laundry',
+                'email' => 'owner@laundry.com',
+                'password' => Hash::make('password'),
+                'role' => 'owner',
+            ]);
+
+            User::create([
+                'name' => 'Pegawai Laundry',
+                'email' => 'pegawai@laundry.com',
+                'password' => Hash::make('password'),
+                'role' => 'pegawai',
+            ]);
+
+
             // 2. Membuat Akun Pelanggan 1
             $pelanggan1 = User::create([
                 'name' => 'Budi Santoso',
