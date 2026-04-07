@@ -3,7 +3,7 @@
 @section('title', 'Dashboard Owner')
 
 @section('content_header')
-    <h1>Dashboard Owner</h1>
+    <h1>Dashboard Admin</h1>
 @stop
 
 @section('content')
@@ -11,28 +11,28 @@
     <div class="row">
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box">
-                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-wallet"></i></span>
+                <span class="info-box-icon bg-info elevation-1"><i class="fas fa-tshirt"></i></span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Pendapatan Hari Ini</span>
-                    <span class="info-box-number">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
+                    <span class="info-box-text">Pesanan Baru</span>
+                    <span class="info-box-number">{{ $pesananBaru }}</span>
                 </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-                <span class="info-box-icon bg-green elevation-1"><i class="fas fa-chart-line"></i></span>
+                <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-sync-alt"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Sedang Diproses</span>
+                    <span class="info-box-number">{{ $pesananDiproses }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3">
+                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-dollar-sign"></i></span>
                 <div class="info-box-content">
                     <span class="info-box-text">Pendapatan Bulan Ini</span>
                     <span class="info-box-number">Rp {{ number_format($pendapatanBulanIni, 0, ',', '.') }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box mb-3">
-                <span class="info-box-icon bg-info elevation-1"><i class="fas fa-shopping-cart"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Transaksi</span>
-                    <span class="info-box-number">{{ $totalTransaksi }}</span>
                 </div>
             </div>
         </div>
@@ -47,112 +47,78 @@
         </div>
     </div>
 
+
     <div class="row">
-        {{-- Grafik Pendapatan --}}
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Grafik Pendapatan Bulan Ini</h3>
+            <div class="card shadow">
+                <div class="card-header border-transparent">
+                    <h3 class="card-title">Pendapatan 7 Hari Terakhir</h3>
                 </div>
                 <div class="card-body">
-                    <div class="chart">
-                        <canvas id="grafikPendapatan" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
+                    <canvas id="revenueChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
                 </div>
             </div>
         </div>
 
-        {{-- Top Layanan --}}
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Top 5 Layanan Terlaris</h3>
+            <div class="card shadow">
+                <div class="card-header border-transparent">
+                    <h3 class="card-title">Transaksi Terbaru</h3>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Layanan</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($layananTerlaris as $layanan)
-                            <tr>
-                                <td>{{ $layanan->nama_layanan }}</td>
-                                <td><span class="badge badge-success">{{ $layanan->total }} Transaksi</span></td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="2" class="text-center">Belum ada data.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <ul class="products-list product-list-in-card pl-3 pr-3">
+                        @foreach($transaksiTerbaru as $t)
+                        <li class="item d-flex align-items-center py-3 border-bottom">
+                            <div class="mr-3 text-center d-flex align-items-center justify-content-center bg-primary rounded-circle shadow-sm" style="width: 45px; height: 45px; font-weight: bold; color: white; min-width: 45px;">
+                                {{ strtoupper(substr($t->pelanggan->nama ?? 'N', 0, 2)) }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="product-title text-dark font-weight-bold d-block">
+                                    {{ $t->pelanggan->nama ?? 'N/A' }}
+                                    <span class="float-right text-success small">Rp {{ number_format($t->total_bayar, 0, ',', '.') }}</span>
+                                </span>
+                                <span class="product-description text-muted small d-block">
+                                    Invoice: {{ $t->kode_invoice }}
+                                    <span class="badge {{ $t->status == 'Baru' ? 'badge-info' : 'badge-warning' }} float-right">{{ $t->status }}</span>
+                                </span>
+                            </div>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ route('admin.transaksi.index') }}" class="uppercase text-sm">Lihat Semua Transaksi</a>
                 </div>
             </div>
         </div>
     </div>
+
+    
 </div>
 @stop
-@push('js')
+
+@section('js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('grafikPendapatan').getContext('2d');
-        
-        // Membuat gradient untuk background bawah grafik (opsional agar lebih mewah)
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(40, 167, 69, 0.5)');
-        gradient.addColorStop(1, 'rgba(40, 167, 69, 0)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: @json($grafikPendapatan->pluck('tanggal')),
-                datasets: [{
-                    label: 'Pendapatan (Rp)',
-                    data: @json($grafikPendapatan->pluck('total')),
-                    fill: true,
-                    backgroundColor: gradient, // Menggunakan gradient
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: 'rgba(40, 167, 69, 1)',
-                    tension: 0.4, // INI KUNCINYA agar grafik berbentuk gelombang/smooth
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false // Sembunyikan label dataset jika ingin lebih clean
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            display: true,
-                            drawBorder: false,
-                            color: 'rgba(0,0,0,0.05)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return 'Rp ' + value.toLocaleString('id-ID');
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Kam', 'Jum', 'Sab', 'Min', 'Sen', 'Sel', 'Rab'],
+            datasets: [{
+                label: 'Pendapatan',
+                data: [650000, 400000, 300000, 280000, 100000, 80000, 150000],
+                borderColor: '#3c8dbc',
+                backgroundColor: 'rgba(60,141,188,0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
     });
 </script>
-@endpush
+@stop

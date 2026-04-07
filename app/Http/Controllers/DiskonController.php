@@ -56,7 +56,6 @@ class DiskonController extends Controller
             'minimal_berat_aturan' => 'required_if:jenis_aturan,berdasarkan_layanan_berat|nullable|numeric|min:0',
         ]);
         
-        // Jika jenis aturan diubah kembali ke 'tanpa_aturan', null-kan field aturan
         $data = $request->all();
         if ($data['jenis_aturan'] === 'tanpa_aturan') {
             $data['layanan_id_aturan'] = null;
@@ -76,4 +75,23 @@ class DiskonController extends Controller
         return redirect()->route('admin.diskon.index')
                          ->with('success', 'Diskon berhasil dihapus.');
     }
+
+    // Fungsi Tambahan untuk Toggle Status Otomatis
+    public function updateStatus($id)
+{
+    $diskon = Diskon::findOrFail($id);
+    $diskon->status = !$diskon->status;
+    $diskon->save();
+
+    // Jika request datang dari AJAX, kirim respons JSON
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'status' => $diskon->status
+        ]);
+    }
+
+    // Fallback jika diakses manual
+    return back()->with('success', 'Status diskon berhasil diubah.');
+}
 }

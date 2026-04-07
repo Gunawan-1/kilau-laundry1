@@ -1,76 +1,215 @@
-<x-app-layout title="Dashboard Pelanggan">
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Dashboard Pelanggan') }}
-            </h2>
-            <a href="{{ route('pelanggan.pesanan.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
-                Buat Pesanan Baru
+@extends('adminlte::page')
+
+@section('title', 'Dashboard Pelanggan')
+
+@section('content_header')
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1 class="m-0">Dashboard Pelanggan</h1>
+        </div>
+        <div class="col-sm-6">
+            <a href="{{ route('pelanggan.pesanan.create') }}" class="btn btn-primary float-right">
+                <i class="fas fa-plus"></i> Buat Pesanan Baru
             </a>
         </div>
-    </x-slot>
+    </div>
+@stop
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ session('success') }}</span>
+@section('content')
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    <!-- Info Row with Statistics -->
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ $transaksiBerjalan->count() }}</h3>
+                    <p>Pesanan Aktif</p>
                 </div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium">Selamat Datang, {{ Auth::user()->name }}!</h3>
-                    <p class="mt-1 text-sm text-gray-600">
-                        Di sini Anda dapat melihat status laundry Anda yang sedang berjalan dan riwayat pesanan.
-                    </p>
+                <div class="icon">
+                    <i class="fas fa-shopping-bag"></i>
                 </div>
             </div>
+        </div>
 
-            <div class="mt-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900">Laundry Aktif Anda</h3>
-                    <div class="mt-4 overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Masuk</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Bayar</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse ($transaksiBerjalan as $transaksi)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $transaksi->kode_invoice }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ \Carbon\Carbon::parse($transaksi->tanggal_masuk)->format('d M Y') }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Rp {{ number_format($transaksi->total_bayar) }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                @if($transaksi->status == 'Baru') bg-blue-100 text-blue-800 
-                                                @elseif($transaksi->status == 'Proses') bg-yellow-100 text-yellow-800 
-                                                @else bg-green-100 text-green-800 @endif">
-                                                {{ $transaksi->status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('pelanggan.pesanan.show', $transaksi->id) }}" class="text-indigo-600 hover:text-indigo-900">Lihat Detail</a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                            Anda tidak memiliki laundry yang sedang aktif.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>
+                        @php
+                            $lunas = $transaksiBerjalan->where('status_pembayaran', 'Lunas')->count();
+                        @endphp
+                        {{ $lunas }}
+                    </h3>
+                    <p>Pembayaran Lunas</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>
+                        @php
+                            $belumLunas = $transaksiBerjalan->where('status_pembayaran', 'Belum Lunas')->count();
+                        @endphp
+                        {{ $belumLunas }}
+                    </h3>
+                    <p>Menunggu Pembayaran</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>Rp {{ number_format($transaksiBerjalan->sum('total_bayar'), 0, ',', '.') }}</h3>
+                    <p>Total Pengeluaran</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-money-bill"></i>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>0
+
+    <!-- Pesanan Aktif Card -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary card-outline">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-list-ul"></i> Laundry Aktif Anda
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    @forelse ($transaksiBerjalan as $transaksi)
+                        <div class="mailbox-read-message border-bottom p-3">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="text-muted small"><strong>Invoice</strong></label>
+                                        <h5 class="font-weight-bold">{{ $transaksi->kode_invoice }}</h5>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="text-muted small"><strong>Tanggal Masuk</strong></label>
+                                        <p>{{ \Carbon\Carbon::parse($transaksi->tanggal_masuk)->format('d M Y') }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="text-muted small"><strong>Total Bayar</strong></label>
+                                        <h6 class="text-success font-weight-bold">Rp {{ number_format($transaksi->total_bayar) }}</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="text-muted small"><strong>Status</strong></label>
+                                        <div>
+                                            <span class="badge badge-@if($transaksi->status == 'Baru') primary @elseif($transaksi->status == 'Proses') warning @elseif($transaksi->status == 'Selesai') info @else success @endif">
+                                                <i class="fas @if($transaksi->status == 'Baru') fa-inbox @elseif($transaksi->status == 'Proses') fa-cog @elseif($transaksi->status == 'Selesai') fa-check @else fa-check-circle @endif"></i>
+                                                {{ $transaksi->status }}
+                                            </span>
+                                            <span class="badge @if($transaksi->status_pembayaran == 'Lunas') badge-success @else badge-danger @endif ml-1">
+                                                <i class="fas @if($transaksi->status_pembayaran == 'Lunas') fa-check-circle @else fa-exclamation @endif"></i>
+                                                {{ $transaksi->status_pembayaran }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-right">
+                                    <a href="{{ route('pelanggan.pesanan.show', $transaksi->id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> Lihat Detail
+                                    </a>
+                                    @if($transaksi->metode_pembayaran == 'qris' && $transaksi->status_pembayaran != 'Lunas')
+                                        <span class="badge badge-warning ml-2">
+                                            <i class="fas fa-qrcode"></i> Tunggu Bayar
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3 mb-2"><strong>Belum ada laundry yang sedang aktif</strong></p>
+                            <p class="text-muted small">Buat pesanan baru untuk memulai layanan laundry Anda</p>
+                            <a href="{{ route('pelanggan.pesanan.create') }}" class="btn btn-primary btn-sm mt-3">
+                                <i class="fas fa-plus"></i> Buat Pesanan Baru
+                            </a>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-info alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5><i class="icon fas fa-info-circle"></i> Informasi Penting!</h5>
+                <ul class="mb-0 mt-2">
+                    <li>✓ Total akhir akan disesuaikan setelah penimbangan di lokasi kami</li>
+                    <li>✓ Pakaian yang tidak diambil lebih dari 30 hari akan menjadi milik kami</li>
+                    <li>✓ Untuk pembayaran QRIS, klik tombol "Lanjutkan Pembayaran" di halaman detail pesanan</li>
+                    <li>✓ Hubungi kami jika ada pertanyaan tentang pesanan Anda</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+@stop
+
+@section('css')
+    <style>
+        .small-box {
+            border-radius: 0.25rem;
+            margin-bottom: 20px;
+        }
+        .small-box .inner h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            white-space: nowrap;
+            padding: 0;
+        }
+        .small-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .mailbox-read-message {
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+        .mailbox-read-message:hover {
+            background-color: #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            border-top-left-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
+        }
+    </style>
+@stop

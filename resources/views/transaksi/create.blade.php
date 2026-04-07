@@ -129,14 +129,25 @@
                             <option value="Proses">Proses</option>
                         </select>
                     </div>
+
                     <div class="form-group">
-                        <label for="status_pembayaran">Status Pembayaran</label>
-                        <select name="status_pembayaran" id="status_pembayaran" class="form-control" required>
-                            <option value="Belum Lunas">Belum Lunas</option>
-                            <option value="Lunas">Lunas</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-block">Simpan Transaksi</button>
+    <label for="status_pembayaran">Status Pembayaran</label>
+    <select name="status_pembayaran" id="status_pembayaran" class="form-control" required>
+        <option value="Belum Lunas">Belum Lunas</option>
+        <option value="Lunas">Lunas</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="metode_pembayaran">Metode Pembayaran</label>
+    <select name="metode_pembayaran" id="metode_pembayaran" class="form-control" required>
+        <option value="">-- Pilih Metode Pembayaran --</option>
+        <option value="tunai">Tunai</option>
+        <option value="qris">QRIS</option>
+    </select>
+</div>
+
+<button type="submit" class="btn btn-success btn-block">Simpan Transaksi</button>
                 </div>
             </div>
         </div>

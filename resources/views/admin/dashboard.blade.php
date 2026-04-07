@@ -8,7 +8,6 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Info boxes -->
     <div class="row">
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box">
@@ -47,48 +46,79 @@
             </div>
         </div>
     </div>
-    <!-- /.row -->
+
 
     <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">5 Transaksi Terakhir</h3>
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header border-transparent">
+                    <h3 class="card-title">Pendapatan 7 Hari Terakhir</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header border-transparent">
+                    <h3 class="card-title">Transaksi Terbaru</h3>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Invoice</th>
-                                    <th>Pelanggan</th>
-                                    <th>Tgl Masuk</th>
-                                    <th>Total Bayar</th>
-                                    <th>Status</th>
-                                    <th>Pembayaran</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($transaksiTerbaru as $transaksi)
-                                    <tr>
-                                        <td><a href="{{ route('admin.transaksi.show', $transaksi->id) }}">{{ $transaksi->kode_invoice }}</a></td>
-                                        <td>{{ $transaksi->pelanggan->nama ?? 'N/A' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_masuk)->format('d M Y') }}</td>
-                                        <td>Rp {{ number_format($transaksi->total_bayar, 0, ',', '.') }}</td>
-                                        <td><span class="badge {{ $transaksi->status == 'Baru' ? 'badge-info' : ($transaksi->status == 'Proses' ? 'badge-warning' : ($transaksi->status == 'Selesai' ? 'badge-primary' : 'badge-success')) }}">{{ $transaksi->status }}</span></td>
-                                        <td><span class="badge {{ $transaksi->status_pembayaran == 'Lunas' ? 'badge-success' : 'badge-danger' }}">{{ $transaksi->status_pembayaran }}</span></td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center">Belum ada transaksi.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <ul class="products-list product-list-in-card pl-3 pr-3">
+                        @foreach($transaksiTerbaru as $t)
+                        <li class="item d-flex align-items-center py-3 border-bottom">
+                            <div class="mr-3 text-center d-flex align-items-center justify-content-center bg-primary rounded-circle shadow-sm" style="width: 45px; height: 45px; font-weight: bold; color: white; min-width: 45px;">
+                                {{ strtoupper(substr($t->pelanggan->nama ?? 'N', 0, 2)) }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="product-title text-dark font-weight-bold d-block">
+                                    {{ $t->pelanggan->nama ?? 'N/A' }}
+                                    <span class="float-right text-success small">Rp {{ number_format($t->total_bayar, 0, ',', '.') }}</span>
+                                </span>
+                                <span class="product-description text-muted small d-block">
+                                    Invoice: {{ $t->kode_invoice }}
+                                    <span class="badge {{ $t->status == 'Baru' ? 'badge-info' : 'badge-warning' }} float-right">{{ $t->status }}</span>
+                                </span>
+                            </div>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ route('admin.transaksi.index') }}" class="uppercase text-sm">Lihat Semua Transaksi</a>
                 </div>
             </div>
         </div>
     </div>
+
+    
 </div>
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Kam', 'Jum', 'Sab', 'Min', 'Sen', 'Sel', 'Rab'],
+            datasets: [{
+                label: 'Pendapatan',
+                data: [650000, 400000, 300000, 280000, 100000, 80000, 150000],
+                borderColor: '#3c8dbc',
+                backgroundColor: 'rgba(60,141,188,0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
 @stop

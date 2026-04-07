@@ -10,6 +10,7 @@ class PelangganController extends Controller
     /**
      * Display a listing of the resource.
      */
+    
     public function index()
     {
         $pelanggans = Pelanggan::latest()->paginate(10);
@@ -34,6 +35,7 @@ class PelangganController extends Controller
             'nama' => 'required|string|max:255',
             'alamat' => 'required|string',
             'nomor_telepon' => 'required|string|max:20',
+            'metode_pembayaran' => 'nullable|string|in:Tunai,QRIS',
         ]);
 
         // Buat data pelanggan baru

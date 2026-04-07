@@ -39,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
                 $event->menu->add(['text' => 'Profil Laundry', 'route' => 'admin.profil.edit', 'icon' => 'fas fa-store']);
                 $event->menu->add(['text' => 'Pelanggan', 'url' => 'admin/pelanggan', 'icon' => 'fas fa-users']);
                 $event->menu->add(['text' => 'Layanan', 'url' => 'admin/layanan', 'icon' => 'fas fa-soap']);
-                $event->menu->add(['text' => 'Pegawai', 'url' => 'admin/pegawai', 'icon' => 'fas fa-user-tie']);
+                $event->menu->add(['text' => 'Pegawai', 'route' => 'admin.pegawai.index', 'icon' => 'fas fa-user-tie']);
                 $event->menu->add(['text' => 'Diskon', 'url' => 'admin/diskon', 'icon' => 'fas fa-tags']);
                 $event->menu->add([
                     'text'    => 'Transaksi',
@@ -50,28 +50,56 @@ class AppServiceProvider extends ServiceProvider
                     ],
                 ]);
                 $event->menu->add(['text' => 'Laporan', 'route' => 'admin.laporan.index', 'icon' => 'fas fa-file-alt']);
+                $event->menu->add([
+    'text'    => 'Absensi',
+    'icon'    => 'fas fa-fingerprint',
+    'submenu' => [
+        ['text' => 'Data Absensi', 'url' => 'admin/absensi', 'icon' => 'fas fa-list'],
+        ['text' => 'Atur Jam Kerja', 'url' => 'admin/absensi/jam-kerja', 'icon' => 'fas fa-clock'],
+        ['text' => 'Scanner QR', 'url' => 'admin/absensi/scanner', 'icon' => 'fas fa-qrcode'],
+    ],
+]);
             }
 
             // --- MENU UNTUK PEGAWAI ---
             if ($user->role === 'pegawai') {
-                $event->menu->add('MENU PEGAWAI');
-                $event->menu->add(['text' => 'Dashboard', 'route' => 'pegawai.dashboard', 'icon' => 'fas fa-tachometer-alt']);
-                $event->menu->add([
-                    'text'    => 'Transaksi Laundry',
-                    'icon'    => 'fas fa-cash-register',
-                    'submenu' => [
-                        ['text' => 'Daftar Transaksi', 'route' => 'pegawai.transaksi.index', 'icon' => 'fas fa-list'],
-                        ['text' => 'Tambah Transaksi Baru', 'route' => 'admin.transaksi.create', 'icon' => 'fas fa-plus-circle'],
-                    ],
-                ]);
-                $event->menu->add(['text' => 'Antrian Laundry', 'url' => 'pegawai/antrian', 'icon' => 'fas fa-list-ol']);
-            }
+    $event->menu->add('MENU PEGAWAI');
+    $event->menu->add(['text' => 'Dashboard', 'route' => 'pegawai.dashboard', 'icon' => 'fas fa-tachometer-alt']);
+    
+    // Menu Transaksi
+    $event->menu->add([
+        'text'    => 'Transaksi Laundry',
+        'icon'    => 'fas fa-cash-register',
+        'submenu' => [
+            ['text' => 'Daftar Transaksi', 'route' => 'pegawai.transaksi.index', 'icon' => 'fas fa-list'],
+            // Hati-hati: di bawah ini kamu pakai 'admin.transaksi.create', 
+            // pastikan rute ini bisa diakses role pegawai atau ganti ke rute pegawai.
+            ['text' => 'Tambah Transaksi Baru', 'route' => 'pegawai.transaksi.create', 'icon' => 'fas fa-plus-circle'],
+        ],
+    ]);
+
+    
+    // --- PERBAIKAN MENU ABSENSI PEGAWAI ---
+    $event->menu->add([
+        'text'    => 'Absensi',
+        'icon'    => 'fas fa-fingerprint',
+        'submenu' => [
+            [
+                'text'  => 'Scanner QR', 
+                'route' => 'pegawai.absensi.scanner', 
+                'icon'  => 'fas fa-qrcode'
+            ],
+        ],
+    ]);
+}
 
             // --- MENU UNTUK OWNER ---
             if ($user->role === 'owner') {
                 $event->menu->add('MENU OWNER');
+                $event->menu->add(['text' => 'Dashboard', 'url' => 'owner/dashboard', 'icon' => 'fas fa-tachometer-alt']);
+                $event->menu->add(['text' => 'Pegawai', 'route' => 'owner.pegawai.index', 'icon' => 'fas fa-user-tie']);
                 $event->menu->add(['text' => 'Laporan Pendapatan', 'url' => 'owner/laporan', 'icon' => 'fas fa-chart-line']);
-                $event->menu->add(['text' => 'Data Pegawai', 'route' => 'owner.pegawai.index', 'icon' => 'fas fa-users-cog']);
+                // $event->menu->add(['text' => 'Data Pegawai', 'route' => 'owner.pegawai.index', 'icon' => 'fas fa-users-cog']);
             }
 
             // --- MENU DROPDOWN PROFIL (USER MENU) ---

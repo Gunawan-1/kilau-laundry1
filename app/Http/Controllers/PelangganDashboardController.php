@@ -11,6 +11,8 @@ use App\Models\DetailTransaksi;
 use App\Models\User;
 use App\Models\Diskon;
 use Carbon\Carbon;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class PelangganDashboardController extends Controller
 {
@@ -53,15 +55,23 @@ class PelangganDashboardController extends Controller
             'detail_transaksi' => ['required', 'array', 'min:1'],
             'detail_transaksi.*.layanan_id' => ['required', 'exists:layanans,id'],
             'detail_transaksi.*.kuantitas' => ['required', 'numeric', 'min:0.1'],
-            'manual_diskon_id' => 'nullable|exists:diskons,id'
+            'manual_diskon_id' => 'nullable|exists:diskons,id',
+            'metode_pembayaran' => ['required', 'in:tunai,qris']
         ]);
 
         try {
+            // Check if user has pelanggan profile
+            if (!Auth::user()->pelanggan) {
+                throw new \Exception('Profil pelanggan tidak ditemukan. Silakan lengkapi profil Anda.');
+            }
+
             DB::beginTransaction();
 
             $recalculatedSubtotal = 0;
             $itemsForDiscountCheck = [];
             $detailTransaksiData = [];
+
+            $itemsForMidtrans = [];
 
             foreach ($request->detail_transaksi as $detail) {
                 $layanan = Layanan::find($detail['layanan_id']);
@@ -87,6 +97,13 @@ class PelangganDashboardController extends Controller
                     'harga' => $harga,
                     'subtotal' => $itemSubtotal
                 ];
+
+                $itemsForMidtrans[] = [
+                    'id' => (string) $layanan->id,
+                    'price' => (int) round($harga * $kuantitas),
+                    'quantity' => 1,
+                    'name' => $layanan->nama_layanan . ' (' . $kuantitas . ' kg)'
+                ];
             }
 
             $recalculatedDiskon = $this->calculateBestDiscount(
@@ -97,12 +114,21 @@ class PelangganDashboardController extends Controller
 
             $recalculatedTotalBayar = $recalculatedSubtotal - $recalculatedDiskon;
 
+            // Get metode pembayaran
+            $metodePembayaran = $request->metode_pembayaran ?? 'tunai';
+
+            // Validasi minimal pembelian untuk QRIS
+            if ($metodePembayaran == 'qris' && $recalculatedTotalBayar <= 0) {
+                throw new \Exception('Total bayar harus lebih dari 0 untuk pembayaran QRIS.');
+            }
+
             $pelanggan = Auth::user()->pelanggan;
             $adminUser = User::where('role', 'admin')->first();
 
             if (!$adminUser) {
                 throw new \Exception("Tidak ada user admin yang dapat menangani pesanan ini.");
             }
+            $statusPembayaran = $metodePembayaran === 'tunai' ? 'Lunas' : 'Belum Lunas';
 
             $transaksi = Transaksi::create([
                 'kode_invoice' => 'INV-' . Carbon::now()->format('Ymd') . uniqid(),
@@ -113,20 +139,75 @@ class PelangganDashboardController extends Controller
                 'diskon' => $recalculatedDiskon,
                 'total_bayar' => $recalculatedTotalBayar,
                 'status' => 'Baru',
-                'status_pembayaran' => 'Belum Lunas',
+                'metode_pembayaran' => $metodePembayaran,
+                'status_pembayaran' => $statusPembayaran,
             ]);
 
             foreach ($detailTransaksiData as $data) {
                 $transaksi->detailTransaksis()->create($data);
             }
 
+            // Integrasi Midtrans
+            if ($metodePembayaran == 'qris' && $recalculatedTotalBayar > 0) {
+                try {
+                    Config::$serverKey = config('services.midtrans.serverKey');
+                    Config::$isProduction = config('services.midtrans.isProduction');
+                    Config::$isSanitized = config('services.midtrans.isSanitized');
+                    Config::$is3ds = config('services.midtrans.is3ds');
+
+                    // Validasi konfigurasi tidak kosong
+                    if (!Config::$serverKey) {
+                        throw new \Exception('Midtrans Server Key tidak dikonfigurasi. Hubungi administrator.');
+                    }
+
+                    $params = [
+                        'transaction_details' => [
+                            'order_id' => $transaksi->kode_invoice,
+                            'gross_amount' => (int) round($recalculatedTotalBayar),
+                        ],
+                        'customer_details' => [
+                            'first_name' => Auth::user()->name,
+                            'email' => Auth::user()->email ?? 'pelanggan@laundry.com',
+                        ],
+                        'item_details' => $itemsForMidtrans,
+                    ];
+
+                    $snapToken = Snap::getSnapToken($params);
+                    
+                    if (!$snapToken) {
+                        throw new \Exception('Gagal mendapatkan snap token dari Midtrans. Silakan coba lagi.');
+                    }
+                    
+                    $transaksi->update(['snap_token' => $snapToken]);
+                } catch (\Exception $midtransError) {
+                    DB::rollBack();
+                    return redirect()->back()
+                        ->with('error', 'Kesalahan Midtrans: ' . $midtransError->getMessage())
+                        ->withInput();
+                }
+            }
+
             DB::commit();
+
+            if ($request->metode_pembayaran == 'qris') {
+                return redirect()->route('pelanggan.pesanan.show', $transaksi->id)->with('success', 'Pesanan Anda berhasil dibuat. Silakan lanjutkan pembayaran QRIS.');
+            }
 
             return redirect()->route('pelanggan.dashboard')->with('success', 'Pesanan Anda berhasil dibuat! Silakan antar pakaian Anda ke lokasi kami.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage())->withInput();
+            $errorMsg = $e->getMessage();
+            
+            // Log error untuk debugging
+            \Log::error('Kesalahan pembuatan pesanan: ' . $errorMsg, [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat membuat pesanan: ' . $errorMsg)
+                ->withInput();
         }
     }
 
@@ -142,6 +223,25 @@ class PelangganDashboardController extends Controller
         $transaksi->load('detailTransaksis.layanan');
 
         return view('pelanggan-dashboard.show', compact('transaksi'));
+    }
+
+    public function updatePaymentStatus(Transaksi $transaksi)
+    {
+        if ($transaksi->pelanggan_id !== Auth::user()->pelanggan->id) {
+            abort(403, 'Akses Ditolak');
+        }
+
+        if ($transaksi->metode_pembayaran !== 'qris') {
+            return response()->json(['success' => false, 'message' => 'Transaksi bukan QRIS.']);
+        }
+
+        if ($transaksi->status_pembayaran === 'Lunas') {
+            return response()->json(['success' => true, 'message' => 'Pembayaran sudah lunas.']);
+        }
+
+        $transaksi->update(['status_pembayaran' => 'Lunas']);
+
+        return response()->json(['success' => true, 'status_pembayaran' => 'Lunas']);
     }
 
     /**
@@ -188,5 +288,40 @@ class PelangganDashboardController extends Controller
         }
 
         return $bestDiskon;
+    }
+
+    /**
+     * Mengecek diskon untuk items yang dipilih (AJAX endpoint)
+     */
+    public function cekDiskon(Request $request)
+    {
+        try {
+            $items = $request->input('items', []);
+            
+            // Hitung subtotal dari items
+            $subtotal = 0;
+            foreach ($items as $item) {
+                $layanan = Layanan::find($item['layanan_id']);
+                if ($layanan) {
+                    $subtotal += $layanan->harga_per_kg * $item['kuantitas'];
+                }
+            }
+
+            // Cek diskon otomatis
+            $bestDiskon = $this->calculateBestDiscount($items, $subtotal);
+
+            return response()->json([
+                'success' => true,
+                'potongan' => $bestDiskon,
+                'subtotal' => $subtotal
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error checking discount: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'potongan' => 0,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

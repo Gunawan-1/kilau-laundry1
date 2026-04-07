@@ -5,58 +5,68 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use App\Models\Pelanggan;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class OwnerDashboardController extends Controller
 {
     /**
-     * Dashboard utama OWNER
-     * Fokus: keuangan & monitoring
+     * Menampilkan halaman dashboard utama untuk admin.
      */
     public function index()
-{
-    // 1. Ringkasan Keuangan
-    $pendapatanHariIni = Transaksi::where('status_pembayaran', 'Lunas')
-        ->whereDate('tanggal_masuk', Carbon::today())
-        ->sum('total_bayar');
+    {
+        // Statistik untuk Info Box
+        $pesananBaru = Transaksi::where('status', 'Baru')->count();
+        $pesananDiproses = Transaksi::where('status', 'Proses')->count();
+        $totalPelanggan = Pelanggan::count();
 
-    $pendapatanBulanIni = Transaksi::where('status_pembayaran', 'Lunas')
-        ->whereMonth('tanggal_masuk', Carbon::now()->month)
-        ->whereYear('tanggal_masuk', Carbon::now()->year)
-        ->sum('total_bayar');
+        // Data Pendapatan Bulan Ini
+        $pendapatanBulanIni = Transaksi::where('status_pembayaran', 'Lunas')
+                                      ->whereMonth('tanggal_masuk', Carbon::now()->month)
+                                      ->whereYear('tanggal_masuk', Carbon::now()->year)
+                                      ->sum('total_bayar');
 
-    $totalTransaksi = Transaksi::count();
-    $totalPelanggan = Pelanggan::count();
+        // Transaksi Terbaru (5 terakhir)
+        $transaksiTerbaru = Transaksi::with('pelanggan')->latest()->take(5)->get();
 
-    // 2. Grafik Pendapatan
-    $grafikPendapatan = Transaksi::select(
-            DB::raw('DATE(tanggal_masuk) as tanggal'),
-            DB::raw('SUM(total_bayar) as total')
-        )
-        ->where('status_pembayaran', 'Lunas')
-        ->whereMonth('tanggal_masuk', Carbon::now()->month)
-        ->groupBy('tanggal')
-        ->orderBy('tanggal')
-        ->get();
+        return view('admin.dashboard', compact(
+            'pesananBaru',
+            'pesananDiproses',
+            'totalPelanggan',
+            'pendapatanBulanIni',
+            'transaksiTerbaru'
+        ));
+    }
 
-    // Ambil Top 5 Layanan Terlaris berdasarkan detail transaksi
-$layananTerlaris = DB::table('detail_transaksis')
-    ->join('layanans', 'detail_transaksis.layanan_id', '=', 'layanans.id')
-    ->select('layanans.nama_layanan', DB::raw('COUNT(detail_transaksis.layanan_id) as total'))
-    ->groupBy('layanans.nama_layanan', 'detail_transaksis.layanan_id')
-    ->orderByDesc('total')
-    ->take(5)
-    ->get();
+    /**
+     * Menampilkan halaman laporan transaksi dengan filter tanggal.
+     */
+    public function laporan(Request $request)
+    {
+        // Set tanggal default: awal bulan ini sampai hari ini
+        $tanggalMulai = $request->input('tanggal_mulai', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $tanggalSelesai = $request->input('tanggal_selesai', Carbon::now()->format('Y-m-d'));
 
-    return view('owner.dashboard', compact(
-        'pendapatanHariIni',
-        'pendapatanBulanIni',
-        'totalTransaksi',
-        'totalPelanggan',
-        'grafikPendapatan',
-        'layananTerlaris'
-    ));
-}
+        // Query dasar untuk transaksi dalam rentang tanggal yang dipilih
+        $query = Transaksi::with('pelanggan')
+                          ->whereDate('tanggal_masuk', '>=', $tanggalMulai)
+                          ->whereDate('tanggal_masuk', '<=', $tanggalSelesai);
+                          
+        // Ambil data transaksi yang sudah difilter
+        $laporans = $query->latest()->get();
+
+        // Hitung total untuk ringkasan
+        $totalPendapatan = (clone $query)->where('status_pembayaran', 'Lunas')->sum('total_bayar');
+        $totalSubtotal = $laporans->sum('subtotal');
+        $totalDiskon = $laporans->sum('diskon');
+
+        return view('laporan.index', compact(
+            'laporans', 
+            'tanggalMulai', 
+            'tanggalSelesai',
+            'totalPendapatan',
+            'totalSubtotal',
+            'totalDiskon'
+        ));
+    }
 }

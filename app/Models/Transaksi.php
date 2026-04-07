@@ -20,6 +20,8 @@ class Transaksi extends Model
         'total_bayar',
         'status',
         'status_pembayaran',
+        'metode_pembayaran',
+        'snap_token',
     ];
 
     public function pelanggan()
