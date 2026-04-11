@@ -18,55 +18,65 @@ class AdminUserSeeder extends Seeder
     {
         DB::transaction(function () {
             // 1. Membuat Akun Admin
-            User::create([
-                'name' => 'Admin Laundry',
-                'email' => 'admin@laundry.com',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-            ]);
+            if (!User::where('email', 'admin@gmail.com')->exists()) {
+                User::create([
+                    'name' => 'Admin Laundry',
+                    'email' => 'admin@gmail.com',
+                    'password' => Hash::make('12345678'),
+                    'role' => 'admin',
+                ]);
+            }
 
-            User::create([
-                'name' => 'Owner Laundry',
-                'email' => 'owner@laundry.com',
-                'password' => Hash::make('password'),
-                'role' => 'owner',
-            ]);
+            if (!User::where('email', 'owner@gmail.com')->exists()) {
+                User::create([
+                    'name' => 'Owner Laundry',
+                    'email' => 'owner@gmail.com',
+                    'password' => Hash::make('12345678'),
+                    'role' => 'owner',
+                ]);
+            }
 
-            User::create([
-                'name' => 'Pegawai Laundry',
-                'email' => 'pegawai@laundry.com',
-                'password' => Hash::make('password'),
-                'role' => 'pegawai',
-            ]);
+            if (!User::where('email', 'pegawai@gmail.com')->exists()) {
+                User::create([
+                    'name' => 'Pegawai Laundry',
+                    'email' => 'pegawai@gmail.com',
+                    'password' => Hash::make('12345678'),
+                    'role' => 'pegawai',
+                ]);
+            }
 
 
             // 2. Membuat Akun Pelanggan 1
-            $pelanggan1 = User::create([
-                'name' => 'Budi Santoso',
-                'email' => 'budi@example.com',
-                'password' => Hash::make('password'),
-                'role' => 'pelanggan',
-            ]);
-            Pelanggan::create([
-                'user_id' => $pelanggan1->id,
-                'nama' => $pelanggan1->name,
-                'alamat' => 'Jl. Dago Asri No. 15, Bandung',
-                'nomor_telepon' => '081223344556'
-            ]);
+            if (!User::where('email', 'budi@example.com')->exists()) {
+                $pelanggan1 = User::create([
+                    'name' => 'Budi Santoso',
+                    'email' => 'budi@example.com',
+                    'password' => Hash::make('password'),
+                    'role' => 'pelanggan',
+                ]);
+                Pelanggan::create([
+                    'user_id' => $pelanggan1->id,
+                    'nama' => $pelanggan1->name,
+                    'alamat' => 'Jl. Dago Asri No. 15, Bandung',
+                    'nomor_telepon' => '081223344556'
+                ]);
+            }
 
             // 3. Membuat Akun Pelanggan 2
-            $pelanggan2 = User::create([
-                'name' => 'Citra Lestari',
-                'email' => 'citra@example.com',
-                'password' => Hash::make('password'),
-                'role' => 'pelanggan',
-            ]);
-            Pelanggan::create([
-                'user_id' => $pelanggan2->id,
-                'nama' => $pelanggan2->name,
-                'alamat' => 'Jl. Setiabudi No. 45, Bandung',
-                'nomor_telepon' => '087812345678'
-            ]);
+            if (!User::where('email', 'citra@example.com')->exists()) {
+                $pelanggan2 = User::create([
+                    'name' => 'Citra Lestari',
+                    'email' => 'citra@example.com',
+                    'password' => Hash::make('password'),
+                    'role' => 'pelanggan',
+                ]);
+                Pelanggan::create([
+                    'user_id' => $pelanggan2->id,
+                    'nama' => $pelanggan2->name,
+                    'alamat' => 'Jl. Setiabudi No. 45, Bandung',
+                    'nomor_telepon' => '087812345678'
+                ]);
+            }
         });
     }
 }
