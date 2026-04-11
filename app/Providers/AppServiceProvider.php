@@ -78,6 +78,16 @@ class AppServiceProvider extends ServiceProvider
         ],
     ]);
 
+    // Menu Layanan
+    $event->menu->add([
+        'text'    => 'Layanan',
+        'icon'    => 'fas fa-cogs',
+        'submenu' => [
+            ['text' => 'Daftar Layanan', 'route' => 'pegawai.layanan.index', 'icon' => 'fas fa-list'],
+            ['text' => 'Tambah Layanan', 'route' => 'pegawai.layanan.create', 'icon' => 'fas fa-plus-circle'],
+        ],
+    ]);
+
     
     // --- PERBAIKAN MENU ABSENSI PEGAWAI ---
     $event->menu->add([
@@ -99,6 +109,7 @@ class AppServiceProvider extends ServiceProvider
                 $event->menu->add(['text' => 'Dashboard', 'url' => 'owner/dashboard', 'icon' => 'fas fa-tachometer-alt']);
                 $event->menu->add(['text' => 'Pegawai', 'route' => 'owner.pegawai.index', 'icon' => 'fas fa-user-tie']);
                 $event->menu->add(['text' => 'Laporan Pendapatan', 'url' => 'owner/laporan', 'icon' => 'fas fa-chart-line']);
+                $event->menu->add(['text' => 'Layanan', 'route' => 'owner.layanan.index', 'icon' => 'fas fa-cogs']);
                 // $event->menu->add(['text' => 'Data Pegawai', 'route' => 'owner.pegawai.index', 'icon' => 'fas fa-users-cog']);
             }
 

@@ -9,7 +9,7 @@
             <button onclick="window.print();" class="btn btn-dark">
                 <i class="fas fa-print"></i> Cetak Struk
             </button>
-            <a href="{{ route('admin.transaksi.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('owner.transaksi.index') }}" class="btn btn-outline-secondary">
                 Kembali
             </a>
         </div>
@@ -258,31 +258,5 @@
             padding: 10px !important;
             font-size: 12px !important;
         }
-        .receipt-title {
-            font-size: 18px !important;
-        }
-        .receipt-subtitle,
-        .receipt-note,
-        .receipt-footer {
-            font-size: 10px !important;
-        }
-        .receipt-item {
-            padding: 6px 0 !important;
-        }
-        .receipt-summary .receipt-total {
-            font-size: 14px !important;
-        }
-        .receipt-item-meta,
-        .receipt-meta .text-muted {
-            font-size: 10px !important;
-        }
-        .receipt-badge {
-            font-size: 10px !important;
-            padding: 4px 8px !important;
-        }
-        img {
-            max-width: 70px !important;
-        }
     }
 </style>
-@stop

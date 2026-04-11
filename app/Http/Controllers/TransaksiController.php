@@ -138,6 +138,10 @@ class TransaksiController extends Controller
             DB::commit();
 
             if (auth()->user()->role === 'pegawai') {
+                if ($request->metode_pembayaran === 'qris' && $transaksi->snap_token) {
+                    return redirect()->route('pegawai.transaksi.show', $transaksi->id)->with('success', 'Transaksi berhasil dibuat! Silakan lanjutkan pembayaran QRIS.');
+                }
+
                 return redirect()->route('pegawai.transaksi.index')->with('success', 'Transaksi berhasil dibuat!');
             }
 
@@ -188,6 +192,45 @@ class TransaksiController extends Controller
         $potonganOtomatis = $maxOtomatis;
 
         return max($potonganManual, $potonganOtomatis);
+    }
+
+    public function cekDiskon(Request $request)
+    {
+        $request->validate([
+            'items' => 'nullable|array',
+            'items.*.layanan_id' => 'required_with:items|exists:layanans,id',
+            'items.*.kuantitas' => 'required_with:items|numeric|min:0.1',
+        ]);
+
+        $items = $request->input('items', []);
+        $subtotal = 0;
+        $formattedItems = [];
+
+        foreach ($items as $item) {
+            $layanan = Layanan::find($item['layanan_id']);
+
+            if (! $layanan) {
+                continue;
+            }
+
+            $quantity = (float) $item['kuantitas'];
+            $subtotal += $layanan->harga_per_kg * $quantity;
+
+            $formattedItems[] = [
+                'id' => $layanan->id,
+                'price' => $layanan->harga_per_kg,
+                'quantity' => $quantity,
+                'name' => $layanan->nama_layanan,
+            ];
+        }
+
+        $potongan = $this->calculateBestDiscount($formattedItems, $subtotal, null);
+
+        return response()->json([
+            'success' => true,
+            'potongan' => $potongan,
+            'subtotal' => $subtotal,
+        ]);
     }
 
     public function show(Transaksi $transaksi)

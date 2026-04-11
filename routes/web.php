@@ -12,8 +12,11 @@ use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PelangganProfilController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\PegawaiDashboardController;
-use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\PegawaiLayananController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\OwnerLayananController;
+use App\Http\Controllers\OwnerTransaksiController;
 
 // 1. HALAMAN AWAL & DASHBOARD REDIRECTOR
 Route::get('/', [LandingPageController::class, 'index']);
@@ -50,7 +53,6 @@ Route::middleware('auth')->group(function () {
         // Transaksi Admin
         Route::resource('transaksi', TransaksiController::class)->except(['edit', 'update']);
         Route::patch('transaksi/{transaksi}/update-status', [TransaksiController::class, 'updateStatus'])->name('transaksi.updateStatus');
-        Route::post('transaksi/cek-diskon', [TransaksiController::class, 'cekDiskon'])->name('transaksi.cekDiskon');
         Route::get('transaksi/{id}/edit', [TransaksiController::class, 'edit'])->name('transaksi.edit');
         Route::put('transaksi/{id}', [TransaksiController::class, 'update'])->name('transaksi.update');
 
@@ -69,7 +71,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [OwnerDashboardController::class, 'index'])->name('dashboard');
         Route::get('/laporan', [AdminDashboardController::class, 'laporan'])->name('laporan');
         Route::resource('pegawai', UserController::class); // Data Pegawai di Owner
+        Route::get('/layanan', [OwnerLayananController::class, 'index'])->name('layanan.index');
+        Route::get('/transaksi', [OwnerTransaksiController::class, 'index'])->name('transaksi.index');
+        Route::get('/transaksi/{transaksi}', [OwnerTransaksiController::class, 'show'])->name('transaksi.show');
     });
+
+    Route::post('/transaksi/cek-diskon', [TransaksiController::class, 'cekDiskon'])->name('transaksi.cekDiskon');
 
     Route::post('/transaksi/{transaksi}/update-payment-status', [TransaksiController::class, 'updatePaymentStatus'])->name('transaksi.updatePaymentStatus');
 
@@ -83,8 +90,14 @@ Route::middleware('role:pegawai')->prefix('pegawai')->name('pegawai.')->group(fu
 
     // Transaksi Pegawai
     Route::get('/transaksi/create', [TransaksiController::class, 'createPegawai'])->name('transaksi.create');
+    Route::get('/transaksi/{transaksi}', [TransaksiController::class, 'show'])->name('transaksi.show');
+    Route::patch('/transaksi/{transaksi}/update-status', [TransaksiController::class, 'updateStatus'])->name('transaksi.updateStatus');
+    Route::delete('/transaksi/{transaksi}', [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
     Route::get('/transaksi', [TransaksiController::class, 'indexPegawai'])->name('transaksi.index');
     Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
+
+    // Layanan Pegawai
+    Route::resource('layanan', PegawaiLayananController::class);
 });
 
     // --- D. GRUP KHUSUS PELANGGAN ---

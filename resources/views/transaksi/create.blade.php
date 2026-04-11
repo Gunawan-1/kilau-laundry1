@@ -32,7 +32,13 @@
 @endif
 <!-- END BLOK ERROR -->
 
-<form action="{{ route('admin.transaksi.store') }}" method="POST">
+@php
+    $storeRoute = auth()->user()->role === 'pegawai'
+        ? route('pegawai.transaksi.store')
+        : route('admin.transaksi.store');
+@endphp
+
+<form action="{{ $storeRoute }}" method="POST">
     @csrf
     <div class="row">
         <div class="col-md-8">
@@ -242,7 +248,7 @@
 
             // Panggil AJAX untuk mendapatkan diskon otomatis
             $.ajax({
-                url: '{{ route("admin.transaksi.cekDiskon") }}',
+                url: '{{ route("transaksi.cekDiskon") }}',
                 type: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',

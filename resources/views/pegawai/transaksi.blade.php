@@ -2,6 +2,10 @@
 
 @section('title', 'Daftar Transaksi')
 
+@php
+    $transaksiPrefix = auth()->user()->role === 'pegawai' ? 'pegawai.transaksi.' : 'admin.transaksi.';
+@endphp
+
 @section('content_header')
     <h1>Daftar Transaksi</h1>
 @stop
@@ -11,7 +15,7 @@
         <div class="card-header">
             <h3 class="card-title">Riwayat Transaksi</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.transaksi.create') }}" class="btn btn-primary">
+                <a href="{{ route($transaksiPrefix.'create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Tambah Transaksi
                 </a>
             </div>
@@ -56,8 +60,8 @@
                                 </span>
                             </td>
                             <td>
-                                <form onsubmit="return confirm('Apakah Anda Yakin ingin menghapus data ini?');" action="{{ route('admin.transaksi.destroy', $transaksi->id) }}" method="POST">
-                                    <a href="{{ route('admin.transaksi.show', $transaksi->id) }}" class="btn btn-sm btn-info" title="Lihat Invoice">
+                                <form onsubmit="return confirm('Apakah Anda Yakin ingin menghapus data ini?');" action="{{ route($transaksiPrefix.'destroy', $transaksi->id) }}" method="POST">
+                                    <a href="{{ route($transaksiPrefix.'show', $transaksi->id) }}" class="btn btn-sm btn-info" title="Lihat Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#updateStatusModal-{{ $transaksi->id }}" title="Update Status">
@@ -82,7 +86,7 @@
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
-                                    <form action="{{ route('admin.transaksi.updateStatus', $transaksi->id) }}" method="POST">
+                                    <form action="{{ route($transaksiPrefix.'updateStatus', $transaksi->id) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <div class="modal-body">

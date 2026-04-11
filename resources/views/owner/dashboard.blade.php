@@ -87,7 +87,7 @@
                     </ul>
                 </div>
                 <div class="card-footer text-center">
-                    <a href="{{ route('admin.transaksi.index') }}" class="uppercase text-sm">Lihat Semua Transaksi</a>
+                    <a href="{{ route('owner.transaksi.index') }}" class="uppercase text-sm">Lihat Semua Transaksi</a>
                 </div>
             </div>
         </div>
